@@ -1,15 +1,16 @@
-section .text
-	global _start
-
-_start:
-	mov eax, 1
-	mov ebx, eax
-	mov eax, 1
-	int 0x80
+global _start
 
 segment .bss:
-	result resb 1
+	result RESB 0 
 
 segment .data:
-	var1	DW	10
-	var2	DW	15
+	var1 DW 10 ; initialize var1
+	var2 DW 15 ; initialize var2
+
+_start:
+	mov eax, [var1] ; move the bytes in memory at var1 into eax
+	add eax, [var2] ; add the bytes in memory at var2 to eax
+	mov ebx, eax
+
+	mov eax, 1 ; sys_exit
+	int 0x80 ; program exit
