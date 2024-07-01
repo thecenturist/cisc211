@@ -16,7 +16,6 @@ _start:
     ADD al, [var3]
     ADD al, [var4]
     MOV [result], al
-    MOV bl, [result]
 
     MOV eax, 1
     INT 0x80
