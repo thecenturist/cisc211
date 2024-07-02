@@ -1,2 +1,2 @@
-# cisc211
-CISC 211 Assembly Language course with Danish Khan.
+# CISC 211: Assembly Language & Computer Organization
+Teacher -  Danish Khan 
