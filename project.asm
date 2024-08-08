@@ -2,40 +2,72 @@ SECTION .text
 global _start
 
 _start:
+    ; Encrypt the message
     MOV esi, msg
     MOV edi, encrypted
-    MOV ecx, msg_len 
+    MOV ecx, msg_len ; loop counter
+    MOV ebx, key
+    MOV edx, key_len
+    MOV ebp, 0
 
 enc_loop:
-    MOV al, [esi]
-    MOV bl, [key]
-    XOR al, bl
+    MOV al, [esi] ; Load message character
+    MOV dl, [ebx + ebp] ; Load key character
+    XOR al, dl ; Perform XOR operation to encrypt
+    MOV [edi], al ; Store encrypted byte into 'encryped' variable buffer
+    ; Move to the next byte of the message, encrypted variable bufer, and key
+    INC esi
+    INC edi
+    INC ebp
+
+    ; Reset the key index if it is >= the key length
+    CMP ebp, edx
+    JAE reset_key_index
+
+    DEC ecx ; reduce loop counter
+    JNZ enc_loop
+    JMP done_encrypt ; finish encryption if loop is done
+
+reset_key_index:
+    XOR ebp, ebp ; sets it to 0
+    JMP enc_loop
+
+done_encrypt:
+    ; Decrypt the message
+    MOV esi, encrypted
+    MOV edi, decrypted
+    MOV ecx, msg_len ; loop counter
+    MOV ebx, key
+    MOV edx, key_len
+    MOV ebp, 0
+
+dec_loop:
+    MOV al, [esi] ; Load current encrypted byte
+    MOV dl, [ebx + ebp] ; Load key character
+    XOR al, dl
     MOV [edi], al
     INC esi
     INC edi
-    LOOP enc_loop 
+    INC ebp
+    CMP ebp, edx
+    JAE reset_key_index_dec
+    DEC ecx
+    JNZ dec_loop
+    JMP done_decrypt
 
-    MOV esi, encrypted
-    MOV edi, decrypted
-    MOV ecx, msg_len
+reset_key_index_dec:
+    XOR ebp, ebp ; sets it to 0
+    JMP dec_loop
 
-dec_loop:
-    MOV al, [esi]
-    MOV bl, [key]
-    XOR al, bl
-    MOV [edi], al ; Store decrypted byte
-    INC esi ; Move to next byte in encrypted message
-    INC edi ; Move to next byte in decrypted
-    LOOP dec_loop
-
+done_decrypt:
     ; Create/Open file
     MOV eax, 8
     MOV ebx, filename
     MOV ecx, 0101h
-    MOV edx, 0666o
+    MOV edx, 0666h
     INT 0x80
 
-    MOV [fd], eax ; Save file descriptor
+    MOV [fd], eax
 
     ; Write "Plain text: "
     MOV eax, 4
@@ -48,7 +80,7 @@ dec_loop:
     MOV eax, 4
     MOV ebx, [fd]
     MOV ecx, msg
-    MOV edx, msg_len 
+    MOV edx, msg_len
     INT 0x80
 
     ; Write newline
@@ -123,7 +155,7 @@ dec_loop:
 
     ; Close file
     MOV eax, 6
-    MOV ebx, [fd] 
+    MOV ebx, [fd]
     INT 0x80
 
     ; Exit program
